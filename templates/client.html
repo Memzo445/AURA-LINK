@@ -1,0 +1,206 @@
+{% extends 'base.html' %}
+{% block title %}{{ profile.display_name|default:'AURA' }} — запись{% endblock %}
+{% block content %}
+<section class="screen client-page">
+    <section class="hero-panel glass-panel hero-panel--client">
+        <div class="hero-banner">
+            <div class="hero-banner__gradient"></div>
+            <div class="hero-banner__orb"></div>
+            <div class="hero-banner__content">
+                <div class="avatar avatar-xl hero-avatar">
+                    {% if profile.avatar_src %}
+                    <img src="{{ profile.avatar_src }}" alt="{{ profile.display_name|default:'AURA' }}">
+                    {% else %}
+                    {{ profile.display_name|default:'A'|slice:':1'|upper }}
+                    {% endif %}
+                </div>
+                <div class="hero-banner__copy">
+                    <div class="eyebrow">Онлайн-запись</div>
+                    <p class="kick">{{ profile.display_name|default:'Мастер' }}</p>
+                    <p class="subtle">{{ profile.description|default:'Выбери время и отправь заявку.' }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="hero-mini">
+            {% if profile.location or profile.location_link %}
+            <div class="geo-spot-card">
+                <div class="geo-spot-card__body">
+                    <div class="eyebrow">Где принимает</div>
+                    <div class="geo-inline__title">{{ profile.location|default:'Адрес не указан' }}</div>
+                    <div class="geo-inline__meta">
+                        {% if profile.location_link %}
+                        Ссылка 2ГИС добавлена.
+                        {% else %}
+                        Ссылка 2ГИС не добавлена.
+                        {% endif %}
+                    </div>
+                </div>
+                {% if profile.location_link %}
+                <div class="geo-spot-card__actions">
+                    <a class="btn if btn-sm" href="{{ profile.location_link }}" target="_blank" rel="noopener"><i
+                            class="fa-solid fa-map-location-dot"></i> Открыть в 2ГИС</a>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+            <div class="vip">
+                <span class="pill pill-success"><i class="fa-solid fa-circle"></i> Запись открыта</span>
+                <span class="pill"><i class="fa-regular fa-clock"></i> {{ profile.working_hours|default:'Время работы не указано' }}</span>
+            </div>
+        </div>
+    </section>
+
+    <section class="section-panel glass-panel">
+        <div class="section-head section-head--stacked">
+            <div>
+                <div class="eyebrow">Быстрая запись</div>
+                <h2>Выбери время и отправь заявку</h2>
+            </div>
+        </div>
+
+        <div class="client-steps">
+            <article class="client-step">
+                <span>1</span>
+                <h3>Выбери время</h3>
+                <p>Свободные окна показаны кнопками. Одно касание — и слот выбран.</p>
+            </article>
+            <article class="client-step">
+                <span>2</span>
+                <h3>Оставь контакты</h3>
+                <p>Имя и телефон или Telegram нужны только для подтверждения записи.</p>
+            </article>
+            <article class="client-step">
+                <span>3</span>
+                <h3>Отправь заявку</h3>
+                <p>Мастер увидит её в своём кабинете и ответит по статусу записи.</p>
+            </article>
+        </div>
+    </section>
+
+    <section class="section-panel glass-panel">
+        <div class="section-head section-head--stacked">
+            <div>
+                <div class="eyebrow">Услуга</div>
+                <h2>Что ты бронируешь</h2>
+            </div>
+        </div>
+
+        {% if service %}
+        <div class="service-preview service-preview--client">
+            <div class="service-icon">{{ service.icon }}</div>
+            <div class="service-preview__copy">
+                <div class="service-title">{{ service.title }}</div>
+                <div class="subtle">{{ service.duration_minutes }} минут</div>
+            </div>
+            <div class="service-price">{{ service.price }} ₸</div>
+        </div>
+        {% else %}
+        <div class="empty-state">У мастера пока не настроена услуга. Вернись позже или открой другую страницу.</div>
+        {% endif %}
+    </section>
+
+    <section class="section-panel glass-panel">
+        <div class="section-head section-head--stacked">
+            <div>
+                <div class="eyebrow">Записаться</div>
+                <h2>Выбери время</h2>
+                <p class="subtle">Занятые окна скрыты автоматически.</p>
+            </div>
+        </div>
+
+        {% if service %}
+        <form method="get" class="stack form-spacious compact-form">
+            <div class="field">
+                <label>Дата записи</label>
+                <input type="date" name="date" value="{{ selected_date }}" class="aura-input"
+                       min="{{ booking_min_date }}" max="{{ booking_max_date }}" onchange="this.form.requestSubmit()">
+            </div>
+        </form>
+
+        <div class="booking-help subtle small">
+            {% if booking_mode == 'request' %}
+            Выбирай время внутри рабочего окна.
+            {% else %}
+            Сначала дата, потом время, потом контакт.
+            {% endif %}
+        </div>
+
+        {% if has_slots %}
+        <form method="post" action="/u/{{ profile.slug }}/book/" class="stack booking-form">
+            {% csrf_token %}
+            <input type="hidden" name="booking_date" value="{{ selected_date }}">
+
+            {% if booking_mode == 'request' %}
+            <div class="field">
+                <label>Время</label>
+                {{ booking_form.time_slot }}
+                <p class="subtle tiny">Можно выбрать время внутри окна {{ work_start_time }}–{{ work_end_time }}. Шаг:
+                    {{ slot_step_minutes }} минут.</p>
+            </div>
+            {% else %}
+            <input type="hidden" name="time_slot" id="selected-time-slot" required>
+            <div class="field">
+                <label>Свободное время</label>
+                <div class="slot-picker" data-slot-picker>
+                    {% for slot in available_slots %}
+                    <button type="button" class="slot-chip {% if forloop.first %}active{% endif %}"
+                            data-slot="{{ slot }}" aria-pressed="{% if forloop.first %}true{% else %}false{% endif %}">
+                        {{ slot }}
+                    </button>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="field">
+                <label>Ваше имя</label>
+                {{ booking_form.client_name }}
+            </div>
+
+            <div class="field">
+                <label>Телефон или Telegram</label>
+                {{ booking_form.client_contact }}
+            </div>
+
+            <div class="field">
+                <label>Email</label>
+                {{ booking_form.client_email }}
+            </div>
+
+            <div class="field">
+                <label>Комментарий</label>
+                {{ booking_form.notes }}
+            </div>
+
+            <button class="btn primary btn-wide" type="submit">Отправить заявку</button>
+        </form>
+        {% else %}
+        <div class="empty-state">На выбранную дату свободных окон нет. Выбери другой день.</div>
+        {% endif %}
+        {% else %}
+        <div class="empty-state">Услуга ещё не настроена. Мастер добавит её немного позже.</div>
+        {% endif %}
+    </section>
+</section>
+
+<script>
+    (function () {
+      const picker = document.querySelector('[data-slot-picker]');
+      const hidden = document.getElementById('selected-time-slot');
+      if (!picker || !hidden) return;
+
+      const chips = picker.querySelectorAll('.slot-chip');
+      chips.forEach((chip) => {
+        chip.addEventListener('click', () => {
+          chips.forEach((item) => item.classList.remove('active'));
+          chip.classList.add('active');
+          hidden.value = chip.dataset.slot || '';
+        });
+      });
+
+      if (chips.length) chips[0].click();
+    })();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/intl-tel-input@25.3.0/build/js/intlTelInput.min.js"></script>
+{% endblock %}

@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block title %}Вход — AURA // LINK{% endblock %}
+{% block content %}
+<section class="screen auth-layout">
+  <section class="hero-panel glass-panel">
+    <div class="eyebrow">AURA // LINK</div>
+    <h1>Открой кабинет и принимай записи без лишних действий</h1>
+    <p class="subtle intro-copy">Одна страница, одна услуга и одна ссылка для клиентов.</p>
+
+    <div class="preview-stack">
+      <article class="preview-card">
+        <span class="preview-index">1</span>
+        <div>
+          <h3>Вход в кабинет</h3>
+          <p>Вход без лишних шагов.</p>
+        </div>
+      </article>
+      <article class="preview-card">
+        <span class="preview-index">2</span>
+        <div>
+          <h3>Настрой профиль</h3>
+          <p>Минимум полей для быстрого старта.</p>
+        </div>
+      </article>
+      <article class="preview-card">
+        <span class="preview-index">3</span>
+        <div>
+          <h3>Отправь ссылку</h3>
+          <p>Клиент сразу видит страницу и оставляет заявку.</p>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="auth-card glass-panel">
+    <div class="eyebrow">Вход мастера</div>
+    <h2>С возвращением</h2>
+    <p class="subtle">Демо: <span class="mono">alex_smith / password123</span></p>
+
+    <form method="post" class="stack form-spacious auth-form">
+      {% csrf_token %}
+      <div class="field">
+        <label>Логин</label>
+        {{ form.username }}
+        {{ form.username.errors }}
+      </div>
+      <div class="field">
+        <label>Пароль</label>
+        {{ form.password }}
+        {{ form.password.errors }}
+      </div>
+      <button class="btn primary btn-wide" type="submit">Войти</button>
+    </form>
+
+    <div class="split-note">
+      Ещё нет страницы? <a href="/register/">Создать профиль мастера</a>
+    </div>
+  </section>
+</section>
+{% endblock %}

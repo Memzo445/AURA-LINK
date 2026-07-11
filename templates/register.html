@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% block title %}Регистрация — AURA // LINK{% endblock %}
+{% block content %}
+<section class="screen auth-layout">
+  <section class="hero-panel glass-panel">
+    <div class="eyebrow">Создание страницы</div>
+    <h1>Собери свой личный booking-профиль за пару минут</h1>
+    <p class="subtle intro-copy">Имя, услуга и ссылка — всё по шагам и без лишней суеты.</p>
+
+    <div class="preview-stack">
+      <article class="preview-card">
+        <span class="preview-index">1</span>
+        <div>
+          <h3>Имя мастера</h3>
+          <p>Чтобы страница выглядела как твой бренд.</p>
+        </div>
+      </article>
+      <article class="preview-card">
+        <span class="preview-index">2</span>
+        <div>
+          <h3>Одна услуга</h3>
+          <p>Меньше полей — больше ясности.</p>
+        </div>
+      </article>
+      <article class="preview-card">
+        <span class="preview-index">3</span>
+        <div>
+          <h3>Поделиться ссылкой</h3>
+          <p>Чем быстрее откроют страницу, тем быстрее придёт запись.</p>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="auth-card glass-panel">
+    <div class="eyebrow">Регистрация</div>
+    <h2>Создать страницу мастера</h2>
+    <p class="subtle">Укажи данные один раз — и появится личная ссылка.</p>
+
+    <form method="post" class="stack form-spacious auth-form">
+      {% csrf_token %}
+      <div class="field"><label>Логин</label>{{ form.username }}{{ form.username.errors }}</div>
+      <div class="field"><label>Имя мастера</label>{{ form.display_name }}{{ form.display_name.errors }}</div>
+      <div class="field"><label>Email</label>{{ form.email }}{{ form.email.errors }}</div>
+      <div class="field"><label>Пароль</label>{{ form.password }}{{ form.password.errors }}</div>
+      <button class="btn primary btn-wide" type="submit">Создать страницу</button>
+    </form>
+
+    <div class="split-note">
+      Уже есть аккаунт? <a href="/login/">Войти</a>
+    </div>
+  </section>
+</section>
+{% endblock %}

@@ -1,0 +1,373 @@
+{% extends 'base.html' %}
+{% block title %}{{ screen_title|default:'Кабинет мастера' }} — AURA // LINK{% endblock %}
+
+{% block content %}
+<section class="screen dashboard-screen dashboard-screen--clean">
+  <header class="page-head">
+    <div>
+      <div class="eyebrow">Кабинет мастера</div>
+      <h1>
+        {% if section == 'profile' %}Профиль{% elif section == 'service' %}Услуга{% else %}Записи на сегодня{% endif %}
+      </h1>
+    </div>
+  </header>
+
+  <section class="summary-card glass-panel">
+    <div class="summary-card__copy">
+      <div class="eyebrow">Твоя ссылка</div>
+      <a class="summary-link summary-link--anchor" href="{{ public_client_url }}" target="_blank" rel="noopener">{{ public_client_url }}</a>
+    </div>
+    <div class="summary-card__action">
+      <button class="btn ghost btn-sm" id="copy-link" type="button" data-copy-value="{{ public_client_url }}"><i class="fa-regular fa-copy"></i> Скопировать ссылку</button>
+    </div>
+  </section>
+
+  {% if section == 'profile' %}
+    <section class="profile-preview glass-panel">
+      <div class="avatar avatar-xl hero-avatar" id="avatar-preview">
+        {% if profile.avatar_src %}
+          <img src="{{ profile.avatar_src }}" alt="{{ profile.display_name|default:'AURA' }}">
+        {% else %}
+          {{ profile.display_name|default:'A'|slice:':1'|upper }}
+        {% endif %}
+      </div>
+      <div class="profile-preview__body">
+        <div class="profile-preview__title">{{ profile.display_name|default:'Мастер' }}</div>
+        <div class="subtle small">{{ profile.location|default:'Адрес не указан' }}</div>
+      </div>
+    </section>
+
+    <section class="section-panel glass-panel">
+      <form id="profile-form" method="post" action="/dashboard/profile/" enctype="multipart/form-data" class="stack form-spacious">
+        {% csrf_token %}
+        {{ profile_form.errors }}
+
+        <div class="field">
+          <label>Имя мастера</label>
+          {{ profile_form.display_name }}
+        </div>
+
+        <div class="field">
+          <label>Аватар</label>
+          <div class="avatar-upload">
+            <div class="avatar avatar-preview">
+              {% if profile.avatar_src %}
+                <img src="{{ profile.avatar_src }}" alt="{{ profile.display_name|default:'AURA' }}">
+              {% else %}
+                <i class="fa-regular fa-image"></i>
+              {% endif %}
+            </div>
+            <div class="avatar-upload__copy">
+              {{ profile_form.avatar_file }}
+              <p class="subtle tiny">Фото из галереи делает страницу теплее и понятнее.</p>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn primary btn-wide" type="submit">Сохранить профиль</button>
+      </form>
+    </section>
+  {% elif section == 'service' %}
+    <section class="section-panel glass-panel">
+      <div class="section-head section-head--stacked">
+        <div>
+          <div class="eyebrow">Услуга</div>
+          <h2>Одна услуга без каталога</h2>
+        </div>
+        {% if service %}<span class="pill pill-success"><i class="fa-solid fa-circle-check"></i> Настроено</span>{% else %}<span class="pill">Пока пусто</span>{% endif %}
+      </div>
+
+      {% if service %}
+        <div class="service-preview service-preview--featured">
+          <div class="service-icon">{{ service.icon }}</div>
+          <div class="service-preview__copy">
+            <div class="service-title">{{ service.title }}</div>
+            <div class="subtle">{{ service.duration_minutes }} минут</div>
+          </div>
+          <div class="service-price">{{ service.price }} ₸</div>
+        </div>
+      {% else %}
+        <div class="empty-state">Добавь первую услугу и отправляй ссылку клиентам.</div>
+      {% endif %}
+
+      <form id="service-form" method="post" action="/dashboard/service/" class="stack form-spacious">
+        {% csrf_token %}
+        {{ service_form.errors }}
+        <div class="field">
+          <label>Название услуги</label>
+          {{ service_form.title }}
+        </div>
+        <div class="grid-2">
+          <div class="field">
+            <label>Цена</label>
+            {{ service_form.price }}
+          </div>
+          <div class="field">
+            <label>Длительность</label>
+            {{ service_form.duration_minutes }}
+          </div>
+        </div>
+        <div class="field">
+          <label>Иконка</label>
+          {{ service_form.icon }}
+        </div>
+
+        <div class="field-card">
+          <div class="field-card__head">
+            <div>
+              <div class="eyebrow">Для клиента</div>
+              <h2>Локация, график и запись</h2>
+            </div>
+          </div>
+
+          {{ service_details_form.errors }}
+
+          <div class="stack">
+            <div class="field">
+              <label>Адрес</label>
+              {{ service_details_form.location }}
+            </div>
+            <div class="field">
+              <label>Ссылка 2ГИС <span class="subtle tiny">(необязательно)</span></label>
+              {{ service_details_form.location_link }}
+            </div>
+            <div class="grid-2">
+              <div class="field">
+                <label>Время работы</label>
+                {{ service_details_form.working_hours }}
+              </div>
+              <div class="field js-extra is-hidden" data-extra="working_hours_custom">
+                <label>Свое время</label>
+                {{ service_details_form.working_hours_custom }}
+              </div>
+            </div>
+
+            <div class="grid-2">
+              <div class="field">
+                <label>Режим записи</label>
+                {{ service_details_form.booking_mode }}
+              </div>
+              <div class="field">
+                <label>Шаг слота</label>
+                {{ service_details_form.slot_step_minutes }}
+              </div>
+            </div>
+
+            <div class="grid-2">
+              <div class="field">
+                <label>Начало</label>
+                {{ service_details_form.work_start_time }}
+              </div>
+              <div class="field">
+                <label>Конец</label>
+                {{ service_details_form.work_end_time }}
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Описание</label>
+              {{ service_details_form.description }}
+            </div>
+          </div>
+        </div>
+
+        <button class="btn primary btn-wide" type="submit">Сохранить услугу</button>
+      </form>
+    </section>
+  {% elif section == 'bookings' %}
+    <section class="section-panel glass-panel bookings-panel">
+      {% if bookings %}
+        <div id="booking-list" class="booking-list">
+          {% for booking in bookings %}
+            <article class="booking-card booking-{{ booking.status }}">
+              <div class="booking-card__top">
+                <div>
+                  <div class="status-badge badge-{{ booking.status }}">
+                    {% if booking.status == 'active' %}Новая заявка{% elif booking.status == 'confirmed' %}Подтверждено{% elif booking.status == 'declined' %}Отклонено{% elif booking.status == 'expired' %}Истекла{% else %}Завершено{% endif %}
+                  </div>
+                  <div class="booking-title">{{ booking.client_name }}</div>
+                  <div class="subtle">{{ booking.service.title }}</div>
+                </div>
+                <div class="booking-price">{{ booking.service.price }} ₸</div>
+              </div>
+
+              <div class="booking-meta">
+                <span>{{ booking.booking_date }}</span>
+                <span>•</span>
+                <span>{{ booking.time_slot }}</span>
+                <span>•</span>
+                <span>{{ booking.client_contact }}</span>
+                {% if booking.client_email %}
+                  <span>•</span>
+                  <span>{{ booking.client_email }}</span>
+                {% endif %}
+              </div>
+
+              {% if booking.decline_reason %}
+                <div class="booking-note">Причина отказа: {{ booking.decline_reason }}</div>
+              {% endif %}
+
+              {% if booking.notes %}
+                <div class="booking-note">{{ booking.notes }}</div>
+              {% endif %}
+
+              <div class="booking-actions">
+                {% if booking.status == 'active' %}
+                  <button type="button" class="btn ghost danger btn-wide js-open-decline-panel" data-target="decline-panel-{{ booking.id }}">Отклонить</button>
+                  <form method="post" action="/dashboard/bookings/{{ booking.id }}/status/">
+                    {% csrf_token %}
+                    <input type="hidden" name="status" value="confirmed">
+                    <button class="btn primary btn-wide" type="submit">Принять</button>
+                  </form>
+
+                  <form method="post" action="/dashboard/bookings/{{ booking.id }}/status/" id="decline-panel-{{ booking.id }}" class="decline-panel is-hidden" data-decline-panel>
+                    {% csrf_token %}
+                    <input type="hidden" name="status" value="declined">
+
+                    <div class="field">
+                      <label>Причина отказа</label>
+                      <select name="decline_reason_choice" class="aura-input js-decline-reason-select">
+                        <option value="Обед">Обед</option>
+                        <option value="Задержка">Задержка</option>
+                        <option value="Занятость">Занятость</option>
+                        <option value="Не подходит время">Не подходит время</option>
+                        <option value="Другое">Другое</option>
+                      </select>
+                    </div>
+
+                    <div class="field js-decline-custom is-hidden">
+                      <label>Своя причина</label>
+                      <textarea name="decline_reason_custom" rows="2" class="aura-input" placeholder="Напиши свою причину"></textarea>
+                    </div>
+
+                    <button class="btn ghost danger btn-wide" type="submit">Отправить отказ</button>
+                  </form>
+                {% elif booking.status == 'confirmed' %}
+                  <form method="post" action="/dashboard/bookings/{{ booking.id }}/status/" class="booking-actions-single">
+                    {% csrf_token %}
+                    <input type="hidden" name="status" value="done">
+                    <button class="btn primary btn-wide" type="submit">Завершить</button>
+                  </form>
+                {% elif booking.status == 'expired' %}
+                  <div class="booking-actions__done">Авто-отмена по времени</div>
+                {% else %}
+                  <div class="booking-actions__done">Без действий</div>
+                {% endif %}
+              </div>
+            </article>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="empty-state">Пока нет записей. Поделись ссылкой с клиентами — заявки появятся здесь.</div>
+      {% endif %}
+    </section>
+  {% endif %}
+
+  <nav class="bottom-nav">
+    <a href="/dashboard/profile/" class="bottom-nav__item {% if nav_active == 'profile' %}active{% endif %}">
+      <i class="fa-solid fa-user"></i>
+      <span>Профиль</span>
+    </a>
+    <a href="/dashboard/service/" class="bottom-nav__item {% if nav_active == 'service' %}active{% endif %}">
+      <i class="fa-solid fa-scissors"></i>
+      <span>Услуга</span>
+    </a>
+    <a href="/dashboard/bookings/" class="bottom-nav__item {% if nav_active == 'bookings' %}active{% endif %}">
+      <i class="fa-solid fa-list-check"></i>
+      <span>Записи</span>
+    </a>
+  </nav>
+</section>
+
+
+<script>
+(() => {
+  const hash = window.location.hash;
+  if (hash) {
+    const el = document.querySelector(hash);
+    if (el) {
+      window.requestAnimationFrame(() => {
+        el.scrollIntoView({ block: 'start', behavior: 'instant' });
+      });
+    }
+  }
+
+  const btn = document.getElementById('copy-link');
+
+  const copyText = async (text) => {
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+        return true;
+      }
+    } catch (e) {}
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.setAttribute('readonly', 'true');
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      const ok = document.execCommand('copy');
+      ta.remove();
+      return ok;
+    } catch (e) {
+      return false;
+    }
+  };
+
+  if (btn) {
+    const original = btn.innerHTML;
+    const value = btn.dataset.copyValue || '';
+
+    const setState = (text) => {
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-check"></i> ${text}`;
+      window.setTimeout(() => {
+        btn.disabled = false;
+        btn.innerHTML = original;
+      }, 1400);
+    };
+
+    btn.addEventListener('click', async () => {
+      if (!value) return;
+      const ok = await copyText(value);
+      if (ok) setState('Скопировано');
+    });
+  }
+
+  document.querySelectorAll('[data-decline-panel]').forEach((panel) => {
+    const select = panel.querySelector('.js-decline-reason-select');
+    const customWrap = panel.querySelector('.js-decline-custom');
+    const customInput = customWrap ? customWrap.querySelector('textarea') : null;
+
+    const syncCustom = () => {
+      if (!select || !customWrap) return;
+      const showCustom = select.value === 'Другое';
+      customWrap.classList.toggle('is-hidden', !showCustom);
+      if (!showCustom && customInput) customInput.value = '';
+    };
+
+    if (select) {
+      select.addEventListener('change', syncCustom);
+      syncCustom();
+    }
+  });
+
+  document.querySelectorAll('.js-open-decline-panel').forEach((button) => {
+    button.addEventListener('click', () => {
+      const targetId = button.dataset.target;
+      const panel = targetId ? document.getElementById(targetId) : null;
+      if (!panel) return;
+      panel.classList.remove('is-hidden');
+      const select = panel.querySelector('.js-decline-reason-select');
+      if (select) select.focus();
+      panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
+  });
+})();
+</script>
+
+{% endblock %}
